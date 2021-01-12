@@ -114,12 +114,13 @@ class GdalUe4Conan(ConanFile):
             "--without-rasdaman",
             "--without-armadillo",
             "--without-cryptopp",
+            "--with-zstd=no",
             "--with-proj={}".format(self.deps_cpp_info["proj-ue4"].rootpath),
             "--with-geos={}".format(geosConfig)
         ]
     
     def source(self):
-        self.run("git clone --progress --depth=1 https://github.com/OSGeo/gdal.git -b v{}".format(self.version))
+        self.run("git clone --progress --depth=1 https://github.com/falcon4ever/gdal.git -b v2.4.0-macosx-xcode12")
     
     def build(self):
         
@@ -221,6 +222,10 @@ class GdalUe4Conan(ConanFile):
         # Run autogen.sh
         self.run("./autogen.sh")
         
+        # Patch out iconv support under Mac OS X
+        if self.settings.os == "Macos":
+            tools.replace_in_file("./configure", "iconv.h", "iconv_h")
+
         # Patch out iconv support under Linux, since the UE4 bundled toolchain doesn't include it
         if self.settings.os == "Linux":
             tools.replace_in_file("./configure", "iconv.h", "iconv_h")
